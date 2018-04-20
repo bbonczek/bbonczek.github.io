@@ -1,6 +1,6 @@
 ---
 layout: post
-title:  "Cześc Ola!"
+title:  "custom file protocol in CEF"
 date:   2018-04-18 21:44:09 +0200
 categories: jekyll update
 ---
