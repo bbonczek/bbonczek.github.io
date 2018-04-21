@@ -1,9 +1,36 @@
 ---
 layout: post
-title:  "custom file protocol in CEF"
+title:  "serve content in CEF without http server"
 date:   2018-04-18 21:44:09 +0200
 categories: jekyll update
 ---
+So, you want to serve page via `Chromium Embedded Framework`, but you don't want to host http server (or make client do it)? There are 2 ways to achieve it, but if you are only interested in quick solution, scroll down to `custom file protocol`.
+
+### why you can't just use file protocol
+
+The way file protocol works in `Chromium`
+.
+
+.
+
+.
+
+.
+
+.
+
+.
+
+.
+
+.
+
+.
+
+.
+
+.
+
 You’ll find this post in your `_posts` directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run `jekyll serve`, which launches a web server and auto-regenerates your site when a file is updated.
 
 To add new posts, simply add a file in the `_posts` directory that follows the convention `YYYY-MM-DD-name-of-post.ext` and includes the necessary front matter. Take a look at the source for this post to get an idea about how it works.
@@ -14,7 +41,7 @@ Jekyll also offers powerful support for code snippets:
 def print_hi(name)
   puts "Hi, #{name}"
 end
-print_hi('Tom')
+print_hi('Tom')UA-117970144-1
 #=> prints 'Hi, Tom' to STDOUT.
 {% endhighlight %}
 
