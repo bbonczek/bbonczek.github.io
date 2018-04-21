@@ -23,6 +23,7 @@ twitter_username: bbbonczek
 github_username:  bbonczek
 disqus:
   shortname: bbonczek-github-io
+google_analytics: UA-117970144-1
 
 # Build settings
 markdown: kramdown
