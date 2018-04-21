@@ -22,6 +22,9 @@ url: "https://bbonczek.github.io" # the base hostname & protocol for your site, 
 twitter_username: bbbonczek
 github_username:  bbonczek
 
+disqus:
+  shortname: bartoszbczek
+
 # Build settings
 markdown: kramdown
 theme: minima
