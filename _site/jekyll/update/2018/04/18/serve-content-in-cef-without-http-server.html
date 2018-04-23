@@ -51,8 +51,30 @@
 
 <h3 id="why-you-cant-just-use-file-protocol">why you can’t just use file protocol</h3>
 
-<p>The way file protocol works in <code class="highlighter-rouge">Chromium</code>
-.</p>
+<p>If you are here, than you have propably already tried using <code class="highlighter-rouge">file://</code> protocol to make it work, but you have failed - you styles are not applied, or images don’t show up. Why? Due to security restriction that comes with chromium when using file protocol. Let’s say that you have bundled your web application into this structure:</p>
+
+<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="o">|-</span> <span class="n">dist</span>
+    <span class="o">|-</span> <span class="n">index</span><span class="p">.</span><span class="nf">html</span>
+    <span class="o">|-</span> <span class="n">bundle</span><span class="p">.</span><span class="nf">js</span>
+    <span class="o">|-</span> <span class="n">vendors</span><span class="p">.</span><span class="nf">js</span>
+    <span class="o">|-</span> <span class="n">styles</span><span class="p">.</span><span class="nf">css</span>
+    <span class="o">|-</span> <span class="n">assets</span>
+        <span class="o">|-</span> <span class="n">arrow</span><span class="p">.</span><span class="nf">svg</span>
+        <span class="o">|-</span> <span class="n">start</span><span class="p">.</span><span class="nf">svg</span>
+        <span class="o">|-</span> <span class="n">stop</span><span class="p">.</span><span class="nf">svg</span></code></pre></figure>
+
+<p>and in your index.html you are requesting one of graphics in <code class="highlighter-rouge">assets</code> folder.:</p>
+
+<figure class="highlight"><pre><code class="language-html" data-lang="html">...
+<span class="nt">&lt;p&gt;</span>image from assets requested below:<span class="nt">&lt;/p&gt;</span>
+<span class="nt">&lt;img</span> <span class="na">src=</span><span class="s">"images/arrow.svg"</span><span class="nt">/&gt;</span>
+...</code></pre></figure>
+
+<p>Image will not be rendered, because of error looking like this:</p>
+
+<p><code class="highlighter-rouge">XMLHttpRequest cannot load file:///.../images/arrow.svg. Cross origin requests are only supported for HTTP.</code></p>
+
+<p>.</p>
 
 <p>.</p>
 

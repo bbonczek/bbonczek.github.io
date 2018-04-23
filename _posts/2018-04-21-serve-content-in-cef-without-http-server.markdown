@@ -8,7 +8,33 @@ So, you want to serve page via `Chromium Embedded Framework`, but you don't want
 
 ### why you can't just use file protocol
 
-The way file protocol works in `Chromium`
+If you are here, than you have propably already tried using `file://` protocol to make it work, but you have failed - you styles are not applied, or images don't show up. Why? Due to security restriction that comes with chromium when using file protocol. Let's say that you have bundled your web application into this structure:
+{% highlight ruby %}
+|- dist
+    |- index.html
+    |- bundle.js
+    |- vendors.js
+    |- styles.css
+    |- assets
+        |- arrow.svg
+        |- start.svg
+        |- stop.svg
+{% endhighlight %}
+
+and in your index.html you are requesting one of graphics in `assets` folder.:
+
+{% highlight html %}
+...
+<p>image from assets requested below:</p>
+<img src="images/arrow.svg"/>
+...
+{% endhighlight %}
+
+Image will not be rendered, because of error looking like this:
+
+`XMLHttpRequest cannot load file:///.../images/arrow.svg. Cross origin requests are only supported for HTTP.`
+
+
 .
 
 .

@@ -1,9 +1,31 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2018-04-21T16:25:05+02:00</updated><id>http://localhost:4000/</id><title type="html">bbonczek blog</title><subtitle>I write about stuff.</subtitle><entry><title type="html">serve content in CEF without http server</title><link href="http://localhost:4000/jekyll/update/2018/04/18/serve-content-in-cef-without-http-server.html" rel="alternate" type="text/html" title="serve content in CEF without http server" /><published>2018-04-18T21:44:09+02:00</published><updated>2018-04-18T21:44:09+02:00</updated><id>http://localhost:4000/jekyll/update/2018/04/18/serve-content-in-cef-without-http-server</id><content type="html" xml:base="http://localhost:4000/jekyll/update/2018/04/18/serve-content-in-cef-without-http-server.html">&lt;p&gt;So, you want to serve page via &lt;code class=&quot;highlighter-rouge&quot;&gt;Chromium Embedded Framework&lt;/code&gt;, but you don’t want to host http server (or make client do it)? There are 2 ways to achieve it, but if you are only interested in quick solution, scroll down to &lt;code class=&quot;highlighter-rouge&quot;&gt;custom file protocol&lt;/code&gt;.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2018-04-22T12:58:46+02:00</updated><id>http://localhost:4000/</id><title type="html">bbonczek blog</title><subtitle>I write about stuff.</subtitle><entry><title type="html">serve content in CEF without http server</title><link href="http://localhost:4000/jekyll/update/2018/04/18/serve-content-in-cef-without-http-server.html" rel="alternate" type="text/html" title="serve content in CEF without http server" /><published>2018-04-18T21:44:09+02:00</published><updated>2018-04-18T21:44:09+02:00</updated><id>http://localhost:4000/jekyll/update/2018/04/18/serve-content-in-cef-without-http-server</id><content type="html" xml:base="http://localhost:4000/jekyll/update/2018/04/18/serve-content-in-cef-without-http-server.html">&lt;p&gt;So, you want to serve page via &lt;code class=&quot;highlighter-rouge&quot;&gt;Chromium Embedded Framework&lt;/code&gt;, but you don’t want to host http server (or make client do it)? There are 2 ways to achieve it, but if you are only interested in quick solution, scroll down to &lt;code class=&quot;highlighter-rouge&quot;&gt;custom file protocol&lt;/code&gt;.&lt;/p&gt;
 
 &lt;h3 id=&quot;why-you-cant-just-use-file-protocol&quot;&gt;why you can’t just use file protocol&lt;/h3&gt;
 
-&lt;p&gt;The way file protocol works in &lt;code class=&quot;highlighter-rouge&quot;&gt;Chromium&lt;/code&gt;
-.&lt;/p&gt;
+&lt;p&gt;If you are here, than you have propably already tried using &lt;code class=&quot;highlighter-rouge&quot;&gt;file://&lt;/code&gt; protocol to make it work, but you have failed - you styles are not applied, or images don’t show up. Why? Due to security restriction that comes with chromium when using file protocol. Let’s say that you have bundled your web application into this structure:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ruby&quot; data-lang=&quot;ruby&quot;&gt;&lt;span class=&quot;o&quot;&gt;|-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dist&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;index&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;html&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bundle&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;js&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vendors&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;js&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;styles&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;css&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;|-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;assets&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;arrow&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;svg&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;svg&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;|-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;svg&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;and in your index.html you are requesting one of graphics in &lt;code class=&quot;highlighter-rouge&quot;&gt;assets&lt;/code&gt; folder.:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-html&quot; data-lang=&quot;html&quot;&gt;...
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;p&amp;gt;&lt;/span&gt;image from assets requested below:&lt;span class=&quot;nt&quot;&gt;&amp;lt;/p&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;img&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;images/arrow.svg&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;/&amp;gt;&lt;/span&gt;
+...&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Image will not be rendered, because of error looking like this:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;XMLHttpRequest cannot load file:///.../images/arrow.svg. Cross origin requests are only supported for HTTP.&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;.&lt;/p&gt;
 
 &lt;p&gt;.&lt;/p&gt;
 
