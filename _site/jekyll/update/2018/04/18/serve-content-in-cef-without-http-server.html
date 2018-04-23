@@ -74,6 +74,23 @@
 
 <p><code class="highlighter-rouge">XMLHttpRequest cannot load file:///.../images/arrow.svg. Cross origin requests are only supported for HTTP.</code></p>
 
+<p>Chromium will not allow to you load file that has different origin (basically resided in different folder). Wy it happens is because directory tree <code class="highlighter-rouge">is not</code> treated as single origin. Anything that is a child, relative to your index.html (in this case) would be considered as different origin. To read more about it, you can check out <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=47416">this chromium issue</a>.</p>
+
+<h3 id="why---allow-file-access-from-files-is-not-a-good-idea">why <code class="highlighter-rouge">--allow-file-access-from-files</code> is not a good idea</h3>
+
+<p>Sure, running chrome with this flag will make you app work - unfortunatelly it will open your whole file system to malicious code.</p>
+
+<p>Imagine that someone injected this code into your code:</p>
+
+<figure class="highlight"><pre><code class="language-html" data-lang="html">...
+<span class="nt">&lt;p&gt;</span>image from assets requested below:<span class="nt">&lt;/p&gt;</span>
+<span class="nt">&lt;img</span> <span class="na">src=</span><span class="s">"../../very-important-stuff-inside/passwords.png"</span><span class="nt">/&gt;</span>
+...</code></pre></figure>
+
+<p>This snippet could easly reveal all you important stuff (keeping your passwords in png? Sure, why not).
+That’s why we need:</p>
+
+<h3 id="custom-file-protocol">custom file protocol</h3>
 <p>.</p>
 
 <p>.</p>

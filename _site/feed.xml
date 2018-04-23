@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2018-04-22T12:58:46+02:00</updated><id>http://localhost:4000/</id><title type="html">bbonczek blog</title><subtitle>I write about stuff.</subtitle><entry><title type="html">serve content in CEF without http server</title><link href="http://localhost:4000/jekyll/update/2018/04/18/serve-content-in-cef-without-http-server.html" rel="alternate" type="text/html" title="serve content in CEF without http server" /><published>2018-04-18T21:44:09+02:00</published><updated>2018-04-18T21:44:09+02:00</updated><id>http://localhost:4000/jekyll/update/2018/04/18/serve-content-in-cef-without-http-server</id><content type="html" xml:base="http://localhost:4000/jekyll/update/2018/04/18/serve-content-in-cef-without-http-server.html">&lt;p&gt;So, you want to serve page via &lt;code class=&quot;highlighter-rouge&quot;&gt;Chromium Embedded Framework&lt;/code&gt;, but you don’t want to host http server (or make client do it)? There are 2 ways to achieve it, but if you are only interested in quick solution, scroll down to &lt;code class=&quot;highlighter-rouge&quot;&gt;custom file protocol&lt;/code&gt;.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2018-04-23T09:21:19+02:00</updated><id>http://localhost:4000/</id><title type="html">bbonczek blog</title><subtitle>I write about stuff.</subtitle><entry><title type="html">serve content in CEF without http server</title><link href="http://localhost:4000/jekyll/update/2018/04/18/serve-content-in-cef-without-http-server.html" rel="alternate" type="text/html" title="serve content in CEF without http server" /><published>2018-04-18T21:44:09+02:00</published><updated>2018-04-18T21:44:09+02:00</updated><id>http://localhost:4000/jekyll/update/2018/04/18/serve-content-in-cef-without-http-server</id><content type="html" xml:base="http://localhost:4000/jekyll/update/2018/04/18/serve-content-in-cef-without-http-server.html">&lt;p&gt;So, you want to serve page via &lt;code class=&quot;highlighter-rouge&quot;&gt;Chromium Embedded Framework&lt;/code&gt;, but you don’t want to host http server (or make client do it)? There are 2 ways to achieve it, but if you are only interested in quick solution, scroll down to &lt;code class=&quot;highlighter-rouge&quot;&gt;custom file protocol&lt;/code&gt;.&lt;/p&gt;
 
 &lt;h3 id=&quot;why-you-cant-just-use-file-protocol&quot;&gt;why you can’t just use file protocol&lt;/h3&gt;
 
@@ -25,6 +25,23 @@
 
 &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;XMLHttpRequest cannot load file:///.../images/arrow.svg. Cross origin requests are only supported for HTTP.&lt;/code&gt;&lt;/p&gt;
 
+&lt;p&gt;Chromium will not allow to you load file that has different origin (basically resided in different folder). Wy it happens is because directory tree &lt;code class=&quot;highlighter-rouge&quot;&gt;is not&lt;/code&gt; treated as single origin. Anything that is a child, relative to your index.html (in this case) would be considered as different origin. To read more about it, you can check out &lt;a href=&quot;https://bugs.chromium.org/p/chromium/issues/detail?id=47416&quot;&gt;this chromium issue&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;why---allow-file-access-from-files-is-not-a-good-idea&quot;&gt;why &lt;code class=&quot;highlighter-rouge&quot;&gt;--allow-file-access-from-files&lt;/code&gt; is not a good idea&lt;/h3&gt;
+
+&lt;p&gt;Sure, running chrome with this flag will make you app work - unfortunatelly it will open your whole file system to malicious code.&lt;/p&gt;
+
+&lt;p&gt;Imagine that someone injected this code into your code:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-html&quot; data-lang=&quot;html&quot;&gt;...
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;p&amp;gt;&lt;/span&gt;image from assets requested below:&lt;span class=&quot;nt&quot;&gt;&amp;lt;/p&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;img&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;../../very-important-stuff-inside/passwords.png&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;/&amp;gt;&lt;/span&gt;
+...&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;This snippet could easly reveal all you important stuff (keeping your passwords in png? Sure, why not).
+That’s why we need:&lt;/p&gt;
+
+&lt;h3 id=&quot;custom-file-protocol&quot;&gt;custom file protocol&lt;/h3&gt;
 &lt;p&gt;.&lt;/p&gt;
 
 &lt;p&gt;.&lt;/p&gt;
