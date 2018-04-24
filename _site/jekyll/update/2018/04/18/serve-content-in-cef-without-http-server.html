@@ -63,7 +63,7 @@
         <span class="o">|-</span> <span class="n">start</span><span class="p">.</span><span class="nf">svg</span>
         <span class="o">|-</span> <span class="n">stop</span><span class="p">.</span><span class="nf">svg</span></code></pre></figure>
 
-<p>and in your index.html you are requesting one of graphics in <code class="highlighter-rouge">assets</code> folder.:</p>
+<p>and in your index.html you are requesting one of graphics located in <code class="highlighter-rouge">assets</code> folder.:</p>
 
 <figure class="highlight"><pre><code class="language-html" data-lang="html">...
 <span class="nt">&lt;p&gt;</span>image from assets requested below:<span class="nt">&lt;/p&gt;</span>
@@ -74,13 +74,13 @@
 
 <p><code class="highlighter-rouge">XMLHttpRequest cannot load file:///.../images/arrow.svg. Cross origin requests are only supported for HTTP.</code></p>
 
-<p>Chromium will not allow to you load file that has different origin (basically resided in different folder). Wy it happens is because directory tree <code class="highlighter-rouge">is not</code> treated as single origin. Anything that is a child, relative to your index.html (in this case) would be considered as different origin. To read more about it, you can check out <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=47416">this chromium issue</a>.</p>
+<p>Chromium will not allow to you load file that has different origin (basically resided in different folder). Why it happens is because directory tree <code class="highlighter-rouge">is not</code> treated as single origin. Anything that is a child, relative to your index.html (in this case) is considered to be different origin. To read more about it, you can check out <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=47416">this chromium issue</a>.</p>
 
 <h3 id="why---allow-file-access-from-files-is-not-a-good-idea">why <code class="highlighter-rouge">--allow-file-access-from-files</code> is not a good idea</h3>
 
 <p>Sure, running chrome with this flag will make you app work - unfortunatelly it will open your whole file system to malicious code.</p>
 
-<p>Imagine that someone injected this code into your code:</p>
+<p>Imagine that someone injected this into your code:</p>
 
 <figure class="highlight"><pre><code class="language-html" data-lang="html">...
 <span class="nt">&lt;p&gt;</span>image from assets requested below:<span class="nt">&lt;/p&gt;</span>
@@ -91,6 +91,102 @@
 That’s why we need:</p>
 
 <h3 id="custom-file-protocol">custom file protocol</h3>
+
+<p>CEF allows you to specify custom protocols, that allow you to craft response sufficient for your needs. What we want to create is something simmilar to file protocol, but this something should allow you to work with files from whole directory tree. For purpouse of this article let’s call it <code class="highlighter-rouge">custom protocol</code>. Let’s get to work.</p>
+
+<h4 id="customprotocolschemehandlercs"><code class="highlighter-rouge">CustomProtocolSchemeHandler.cs</code></h4>
+
+<figure class="highlight"><pre><code class="language-c#" data-lang="c#"><span class="k">using</span> <span class="nn">System</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">System.IO</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">CefSharp</span><span class="p">;</span>
+
+<span class="k">namespace</span> <span class="nn">MyProject.CustomProtocol</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="k">class</span> <span class="nc">CustomProtocolSchemeHandler</span><span class="err">`</span> <span class="p">:</span> <span class="n">ResourceHandler</span>
+    <span class="p">{</span>
+        <span class="c1">// Specifies where you bundled app resides.</span>
+        <span class="c1">// Basically path to your index.html</span>
+        <span class="k">private</span> <span class="kt">string</span> <span class="n">frontendFolderPath</span><span class="p">;</span>
+
+        <span class="k">public</span> <span class="n">CustomProtocolSchemeHandler</span><span class="err">`</span><span class="p">()</span>
+        <span class="p">{</span>
+            <span class="n">frontendFolderPath</span> <span class="p">=</span> <span class="n">Path</span><span class="p">.</span><span class="nf">Combine</span><span class="p">(</span><span class="n">AppDomain</span><span class="p">.</span><span class="n">CurrentDomain</span><span class="p">.</span><span class="n">BaseDirectory</span><span class="p">,</span> <span class="s">"./bundle/"</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="c1">// Process request and craft response.</span>
+        <span class="k">public</span> <span class="k">override</span> <span class="kt">bool</span> <span class="nf">ProcessRequestAsync</span><span class="p">(</span><span class="n">IRequest</span> <span class="n">request</span><span class="p">,</span> <span class="n">ICallback</span> <span class="n">callback</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="kt">var</span> <span class="n">uri</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">Uri</span><span class="p">(</span><span class="n">request</span><span class="p">.</span><span class="n">Url</span><span class="p">);</span>
+            <span class="kt">var</span> <span class="n">fileName</span> <span class="p">=</span> <span class="n">uri</span><span class="p">.</span><span class="n">AbsolutePath</span><span class="p">;</span>
+
+            <span class="kt">var</span> <span class="n">requestedFilePath</span> <span class="p">=</span> <span class="n">frontendFolderPath</span> <span class="p">+</span> <span class="n">fileName</span><span class="p">;</span>
+
+            <span class="kt">var</span> <span class="n">isAccesToFilePermitted</span> <span class="p">=</span> <span class="nf">IsRequestedPathInsideFolder</span><span class="p">(</span>
+                <span class="k">new</span> <span class="nf">DirectoryInfo</span><span class="p">(</span><span class="n">requestedFilePath</span><span class="p">),</span>
+                <span class="k">new</span> <span class="nf">DirectoryInfo</span><span class="p">(</span><span class="n">frontendFolderPath</span><span class="p">));</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="n">isAccesToFilePermitted</span> <span class="p">&amp;&amp;</span> <span class="n">File</span><span class="p">.</span><span class="nf">Exists</span><span class="p">(</span><span class="n">requestedFilePath</span><span class="p">))</span>
+            <span class="p">{</span>
+                <span class="kt">byte</span><span class="p">[]</span> <span class="n">bytes</span> <span class="p">=</span> <span class="n">File</span><span class="p">.</span><span class="nf">ReadAllBytes</span><span class="p">(</span><span class="n">requestedFilePath</span><span class="p">);</span>
+                <span class="n">Stream</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">MemoryStream</span><span class="p">(</span><span class="n">bytes</span><span class="p">);</span>
+
+                <span class="kt">var</span> <span class="n">fileExtension</span> <span class="p">=</span> <span class="n">Path</span><span class="p">.</span><span class="nf">GetExtension</span><span class="p">(</span><span class="n">fileName</span><span class="p">);</span>
+                <span class="n">MimeType</span> <span class="p">=</span> <span class="nf">GetMimeType</span><span class="p">(</span><span class="n">fileExtension</span><span class="p">);</span>
+
+                <span class="n">callback</span><span class="p">.</span><span class="nf">Continue</span><span class="p">();</span>
+                <span class="k">return</span> <span class="k">true</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="n">callback</span><span class="p">.</span><span class="nf">Dispose</span><span class="p">();</span>
+            <span class="k">return</span> <span class="k">false</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="c1">// Added for security reasons.</span>
+        <span class="c1">// In this code it is used to verify that requested file is descendant to your index.html.</span>
+        <span class="k">public</span> <span class="kt">bool</span> <span class="nf">IsRequestedPathInsideFolder</span><span class="p">(</span><span class="n">DirectoryInfo</span> <span class="n">path</span><span class="p">,</span> <span class="n">DirectoryInfo</span> <span class="n">folder</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">path</span><span class="p">.</span><span class="n">Parent</span> <span class="p">==</span> <span class="k">null</span><span class="p">)</span>
+            <span class="p">{</span>
+                <span class="k">return</span> <span class="k">false</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="p">(</span><span class="kt">string</span><span class="p">.</span><span class="nf">Equals</span><span class="p">(</span><span class="n">path</span><span class="p">.</span><span class="n">Parent</span><span class="p">.</span><span class="n">FullName</span><span class="p">,</span> <span class="n">folder</span><span class="p">.</span><span class="n">FullName</span><span class="p">,</span> <span class="n">StringComparison</span><span class="p">.</span><span class="n">InvariantCultureIgnoreCase</span><span class="p">))</span>
+            <span class="p">{</span>
+                <span class="k">return</span> <span class="k">true</span><span class="p">;</span>
+            <span class="p">}</span>
+
+            <span class="k">return</span> <span class="nf">IsRequestedPathInsideFolder</span><span class="p">(</span><span class="n">path</span><span class="p">.</span><span class="n">Parent</span><span class="p">,</span> <span class="n">folder</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>We are building our class basing on SchemeHandler.cs provided by Cef.</p>
+
+<h4 id="customprotocolschemehandlerfactorycs"><code class="highlighter-rouge">CustomProtocolSchemeHandlerFactory.cs</code></h4>
+
+<figure class="highlight"><pre><code class="language-c#" data-lang="c#"><span class="k">using</span> <span class="nn">CefSharp</span><span class="p">;</span>
+
+<span class="k">namespace</span> <span class="nn">MyProject.ExtendedFileProtocol</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="k">class</span> <span class="nc">CustomProtocolSchemeHandlerFactory</span> <span class="p">:</span> <span class="n">ISchemeHandlerFactory</span>
+    <span class="p">{</span>
+        <span class="k">public</span> <span class="k">const</span> <span class="kt">string</span> <span class="n">SchemeName</span> <span class="p">=</span> <span class="s">"customFileProtocol"</span><span class="p">;</span>
+
+        <span class="k">public</span> <span class="n">IResourceHandler</span> <span class="nf">Create</span><span class="p">(</span><span class="n">IBrowser</span> <span class="n">browser</span><span class="p">,</span> <span class="n">IFrame</span> <span class="n">frame</span><span class="p">,</span> <span class="kt">string</span> <span class="n">schemeName</span><span class="p">,</span> <span class="n">IRequest</span> <span class="n">request</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="k">return</span> <span class="k">new</span> <span class="nf">CustomProtocolSchemeHandler</span><span class="p">();</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span></code></pre></figure>
+
+<p>At this point we are almost good to go. Now go to place, where you call Cef.Initialize(…), and add this code:</p>
+
+<h4 id="controlxamlcs"><code class="highlighter-rouge">Control.xaml.cs</code></h4>
+
+<figure class="highlight"><pre><code class="language-c#" data-lang="c#"><span class="cm">/* ... */</span>
+
+<span class="cm">/* ... */</span></code></pre></figure>
+
 <p>.</p>
 
 <p>.</p>

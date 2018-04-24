@@ -21,7 +21,7 @@ If you are here, than you have propably already tried using `file://` protocol t
         |- stop.svg
 {% endhighlight %}
 
-and in your index.html you are requesting one of graphics in `assets` folder.:
+and in your index.html you are requesting one of graphics located in `assets` folder.:
 
 {% highlight html %}
 ...
@@ -34,13 +34,13 @@ Image will not be rendered, because of error looking like this:
 
 `XMLHttpRequest cannot load file:///.../images/arrow.svg. Cross origin requests are only supported for HTTP.`
 
-Chromium will not allow to you load file that has different origin (basically resided in different folder). Wy it happens is because directory tree `is not` treated as single origin. Anything that is a child, relative to your index.html (in this case) would be considered as different origin. To read more about it, you can check out [this chromium issue][chromium-isue].
+Chromium will not allow to you load file that has different origin (basically resided in different folder). Why it happens is because directory tree `is not` treated as single origin. Anything that is a child, relative to your index.html (in this case) is considered to be different origin. To read more about it, you can check out [this chromium issue][chromium-isue].
 
 ### why `--allow-file-access-from-files` is not a good idea
 
 Sure, running chrome with this flag will make you app work - unfortunatelly it will open your whole file system to malicious code.
 
-Imagine that someone injected this code into your code:
+Imagine that someone injected this into your code:
 
 {% highlight html %}
 ...
@@ -53,6 +53,107 @@ This snippet could easly reveal all you important stuff (keeping your passwords 
 That's why we need:
 
 ### custom file protocol
+
+CEF allows you to specify custom protocols, that allow you to craft response sufficient for your needs. What we want to create is something simmilar to file protocol, but this something should allow you to work with files from whole directory tree. For purpouse of this article let's call it `custom protocol`. Let's get to work.
+
+#### `CustomProtocolSchemeHandler.cs`
+
+{% highlight C# %}
+using System;
+using System.IO;
+using CefSharp;
+
+namespace MyProject.CustomProtocol
+{
+    public class CustomProtocolSchemeHandler` : ResourceHandler
+    {
+        // Specifies where you bundled app resides.
+        // Basically path to your index.html
+        private string frontendFolderPath;
+
+        public CustomProtocolSchemeHandler`()
+        {
+            frontendFolderPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "./bundle/");
+        }
+
+        // Process request and craft response.
+        public override bool ProcessRequestAsync(IRequest request, ICallback callback)
+        {
+            var uri = new Uri(request.Url);
+            var fileName = uri.AbsolutePath;
+
+            var requestedFilePath = frontendFolderPath + fileName;
+
+            var isAccesToFilePermitted = IsRequestedPathInsideFolder(
+                new DirectoryInfo(requestedFilePath),
+                new DirectoryInfo(frontendFolderPath));
+
+            if (isAccesToFilePermitted && File.Exists(requestedFilePath))
+            {
+                byte[] bytes = File.ReadAllBytes(requestedFilePath);
+                Stream = new MemoryStream(bytes);
+
+                var fileExtension = Path.GetExtension(fileName);
+                MimeType = GetMimeType(fileExtension);
+
+                callback.Continue();
+                return true;
+            }
+
+            callback.Dispose();
+            return false;
+        }
+
+        // Added for security reasons.
+        // In this code it is used to verify that requested file is descendant to your index.html.
+        public bool IsRequestedPathInsideFolder(DirectoryInfo path, DirectoryInfo folder)
+        {
+            if (path.Parent == null)
+            {
+                return false;
+            }
+
+            if (string.Equals(path.Parent.FullName, folder.FullName, StringComparison.InvariantCultureIgnoreCase))
+            {
+                return true;
+            }
+
+            return IsRequestedPathInsideFolder(path.Parent, folder);
+        }
+    }
+}
+{% endhighlight %}
+
+We are building our class basing on SchemeHandler.cs provided by Cef.
+
+#### `CustomProtocolSchemeHandlerFactory.cs`
+
+{% highlight C# %}
+using CefSharp;
+
+namespace MyProject.ExtendedFileProtocol
+{
+    public class CustomProtocolSchemeHandlerFactory : ISchemeHandlerFactory
+    {
+        public const string SchemeName = "customFileProtocol";
+
+        public IResourceHandler Create(IBrowser browser, IFrame frame, string schemeName, IRequest request)
+        {
+            return new CustomProtocolSchemeHandler();
+        }
+    }
+}
+{% endhighlight %}
+
+At this point we are almost good to go. Now go to place, where you call Cef.Initialize(...), and add this code:
+
+#### `Control.xaml.cs`
+
+{% highlight C# %}
+/* ... */
+
+/* ... */
+{% endhighlight %}
 .
 
 .
