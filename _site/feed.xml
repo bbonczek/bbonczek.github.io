@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2018-04-24T08:58:52+02:00</updated><id>http://localhost:4000/</id><title type="html">bbonczek blog</title><subtitle>I write about stuff.</subtitle><entry><title type="html">serve content in CEF without http server</title><link href="http://localhost:4000/jekyll/update/2018/04/18/serve-content-in-cef-without-http-server.html" rel="alternate" type="text/html" title="serve content in CEF without http server" /><published>2018-04-18T21:44:09+02:00</published><updated>2018-04-18T21:44:09+02:00</updated><id>http://localhost:4000/jekyll/update/2018/04/18/serve-content-in-cef-without-http-server</id><content type="html" xml:base="http://localhost:4000/jekyll/update/2018/04/18/serve-content-in-cef-without-http-server.html">&lt;p&gt;So, you want to serve page via &lt;code class=&quot;highlighter-rouge&quot;&gt;Chromium Embedded Framework&lt;/code&gt;, but you don’t want to host http server (or make client do it)? There are 2 ways to achieve it, but if you are only interested in quick solution, scroll down to &lt;code class=&quot;highlighter-rouge&quot;&gt;custom file protocol&lt;/code&gt;.&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.3">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2018-04-24T21:37:15+02:00</updated><id>http://localhost:4000/</id><title type="html">bbonczek blog</title><subtitle>I write about stuff.</subtitle><entry><title type="html">serve content in CEF without http server</title><link href="http://localhost:4000/jekyll/update/2018/04/24/serve-content-in-cef-without-http-server.html" rel="alternate" type="text/html" title="serve content in CEF without http server" /><published>2018-04-24T21:37:00+02:00</published><updated>2018-04-24T21:37:00+02:00</updated><id>http://localhost:4000/jekyll/update/2018/04/24/serve-content-in-cef-without-http-server</id><content type="html" xml:base="http://localhost:4000/jekyll/update/2018/04/24/serve-content-in-cef-without-http-server.html">&lt;p&gt;So, you want to serve page via &lt;code class=&quot;highlighter-rouge&quot;&gt;Chromium Embedded Framework&lt;/code&gt;, but you don’t want to host http server? There are 2 ways to achieve it, but if you are only interested in a quick solution, scroll down to &lt;code class=&quot;highlighter-rouge&quot;&gt;custom file protocol&lt;/code&gt;.&lt;/p&gt;
 
 &lt;h3 id=&quot;why-you-cant-just-use-file-protocol&quot;&gt;why you can’t just use file protocol&lt;/h3&gt;
 
-&lt;p&gt;If you are here, than you have propably already tried using &lt;code class=&quot;highlighter-rouge&quot;&gt;file://&lt;/code&gt; protocol to make it work, but you have failed - you styles are not applied, or images don’t show up. Why? Due to security restriction that comes with chromium when using file protocol. Let’s say that you have bundled your web application into this structure:&lt;/p&gt;
+&lt;p&gt;If you are here, then I guess that you have already tried using &lt;code class=&quot;highlighter-rouge&quot;&gt;file://&lt;/code&gt; protocol to make it work, but you have failed - your styles are not applied, or images don’t show up. Why? Due to security restrictions that come with chromium when using file protocol. Let’s say that you have bundled your web application into this structure:&lt;/p&gt;
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ruby&quot; data-lang=&quot;ruby&quot;&gt;&lt;span class=&quot;o&quot;&gt;|-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dist&lt;/span&gt;
     &lt;span class=&quot;o&quot;&gt;|-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;index&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;html&lt;/span&gt;
@@ -14,22 +14,22 @@
         &lt;span class=&quot;o&quot;&gt;|-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;start&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;svg&lt;/span&gt;
         &lt;span class=&quot;o&quot;&gt;|-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;stop&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;svg&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
-&lt;p&gt;and in your index.html you are requesting one of graphics located in &lt;code class=&quot;highlighter-rouge&quot;&gt;assets&lt;/code&gt; folder.:&lt;/p&gt;
+&lt;p&gt;and in your &lt;code class=&quot;highlighter-rouge&quot;&gt;index.html&lt;/code&gt; you are requesting one of graphics located in &lt;code class=&quot;highlighter-rouge&quot;&gt;assets&lt;/code&gt; folder.:&lt;/p&gt;
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-html&quot; data-lang=&quot;html&quot;&gt;...
 &lt;span class=&quot;nt&quot;&gt;&amp;lt;p&amp;gt;&lt;/span&gt;image from assets requested below:&lt;span class=&quot;nt&quot;&gt;&amp;lt;/p&amp;gt;&lt;/span&gt;
 &lt;span class=&quot;nt&quot;&gt;&amp;lt;img&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;images/arrow.svg&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;/&amp;gt;&lt;/span&gt;
 ...&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
-&lt;p&gt;Image will not be rendered, because of error looking like this:&lt;/p&gt;
+&lt;p&gt;Image will not be rendered, because of an error that looks lke this:&lt;/p&gt;
 
 &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;XMLHttpRequest cannot load file:///.../images/arrow.svg. Cross origin requests are only supported for HTTP.&lt;/code&gt;&lt;/p&gt;
 
-&lt;p&gt;Chromium will not allow to you load file that has different origin (basically resided in different folder). Why it happens is because directory tree &lt;code class=&quot;highlighter-rouge&quot;&gt;is not&lt;/code&gt; treated as single origin. Anything that is a child, relative to your index.html (in this case) is considered to be different origin. To read more about it, you can check out &lt;a href=&quot;https://bugs.chromium.org/p/chromium/issues/detail?id=47416&quot;&gt;this chromium issue&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;Chromium will not allow you to load file that has a different origin (basically, located in different folder). Why it happens is because a directory tree &lt;code class=&quot;highlighter-rouge&quot;&gt;is not&lt;/code&gt; treated as a single origin. Anything that is a child, relative to your index.html (in this case) is not considered to be a single origin. To read more about it, you can check out &lt;a href=&quot;https://bugs.chromium.org/p/chromium/issues/detail?id=47416&quot;&gt;this chromium issue&lt;/a&gt;.&lt;/p&gt;
 
 &lt;h3 id=&quot;why---allow-file-access-from-files-is-not-a-good-idea&quot;&gt;why &lt;code class=&quot;highlighter-rouge&quot;&gt;--allow-file-access-from-files&lt;/code&gt; is not a good idea&lt;/h3&gt;
 
-&lt;p&gt;Sure, running chrome with this flag will make you app work - unfortunatelly it will open your whole file system to malicious code.&lt;/p&gt;
+&lt;p&gt;Sure, running chrome with this flag will make your app work - unfortunatelly, it will open your whole file system to malicious code.&lt;/p&gt;
 
 &lt;p&gt;Imagine that someone injected this into your code:&lt;/p&gt;
 
@@ -38,12 +38,12 @@
 &lt;span class=&quot;nt&quot;&gt;&amp;lt;img&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;src=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;../../very-important-stuff-inside/passwords.png&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;/&amp;gt;&lt;/span&gt;
 ...&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
-&lt;p&gt;This snippet could easly reveal all you important stuff (keeping your passwords in png? Sure, why not).
+&lt;p&gt;This snippet could easily reveal all you important stuff (keeping your passwords in png? Sure, why not).
 That’s why we need:&lt;/p&gt;
 
 &lt;h3 id=&quot;custom-file-protocol&quot;&gt;custom file protocol&lt;/h3&gt;
 
-&lt;p&gt;CEF allows you to specify custom protocols, that allow you to craft response sufficient for your needs. What we want to create is something simmilar to file protocol, but this something should allow you to work with files from whole directory tree. For purpouse of this article let’s call it &lt;code class=&quot;highlighter-rouge&quot;&gt;custom protocol&lt;/code&gt;. Let’s get to work.&lt;/p&gt;
+&lt;p&gt;CEF allows you to specify custom protocols that allow you to craft response sufficient for your needs. What we want to create is something similar to file protocol, but this &lt;em&gt;something&lt;/em&gt; should allow you to work with files from whole directory tree. For purpouse of this article let’s call it &lt;code class=&quot;highlighter-rouge&quot;&gt;custom protocol&lt;/code&gt;. Let’s get to work.&lt;/p&gt;
 
 &lt;h4 id=&quot;customprotocolschemehandlercs&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;CustomProtocolSchemeHandler.cs&lt;/code&gt;&lt;/h4&gt;
 
@@ -53,13 +53,13 @@ That’s why we need:&lt;/p&gt;
 
 &lt;span class=&quot;k&quot;&gt;namespace&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;MyProject.CustomProtocol&lt;/span&gt;
 &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;CustomProtocolSchemeHandler&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;`&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ResourceHandler&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;CustomProtocolSchemeHandler&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ResourceHandler&lt;/span&gt;
     &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
         &lt;span class=&quot;c1&quot;&gt;// Specifies where you bundled app resides.&lt;/span&gt;
         &lt;span class=&quot;c1&quot;&gt;// Basically path to your index.html&lt;/span&gt;
         &lt;span class=&quot;k&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;string&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;frontendFolderPath&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
 
-        &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CustomProtocolSchemeHandler&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;`&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;CustomProtocolSchemeHandler&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
         &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
             &lt;span class=&quot;n&quot;&gt;frontendFolderPath&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Combine&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;AppDomain&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CurrentDomain&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;BaseDirectory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;./bundle/&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
         &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
@@ -135,41 +135,25 @@ That’s why we need:&lt;/p&gt;
 &lt;h4 id=&quot;controlxamlcs&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Control.xaml.cs&lt;/code&gt;&lt;/h4&gt;
 
 &lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-c#&quot; data-lang=&quot;c#&quot;&gt;&lt;span class=&quot;cm&quot;&gt;/* ... */&lt;/span&gt;
+&lt;span class=&quot;kt&quot;&gt;var&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CefSettings&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;BrowserSubprocessPath&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;GetCefExecutablePath&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
 
+&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;RegisterScheme&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CefCustomScheme&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;SchemeName&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CustomProtocolSchemeHandlerFactory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;SchemeName&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+  &lt;span class=&quot;n&quot;&gt;SchemeHandlerFactory&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;CustomProtocolSchemeHandlerFactory&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;Cef&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nf&quot;&gt;Initialize&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;settings&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// 'local-pc' doesn't mean anything - it's just 'placeholder' to make cef recognize it as protocol&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;browser&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;ChromiumWebBrowser&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;customfileprotocol:\\local-pc\\index.html&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
 &lt;span class=&quot;cm&quot;&gt;/* ... */&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
 
-&lt;p&gt;.&lt;/p&gt;
+&lt;p&gt;It is important to register scheme &lt;code class=&quot;highlighter-rouge&quot;&gt;before&lt;/code&gt; initializing CEF.&lt;/p&gt;
 
-&lt;p&gt;.&lt;/p&gt;
+&lt;h3 id=&quot;notes&quot;&gt;Notes&lt;/h3&gt;
 
-&lt;p&gt;.&lt;/p&gt;
-
-&lt;p&gt;.&lt;/p&gt;
-
-&lt;p&gt;.&lt;/p&gt;
-
-&lt;p&gt;.&lt;/p&gt;
-
-&lt;p&gt;.&lt;/p&gt;
-
-&lt;p&gt;.&lt;/p&gt;
-
-&lt;p&gt;.&lt;/p&gt;
-
-&lt;p&gt;.&lt;/p&gt;
-
-&lt;p&gt;.&lt;/p&gt;
-
-&lt;p&gt;You’ll find this post in your &lt;code class=&quot;highlighter-rouge&quot;&gt;_posts&lt;/code&gt; directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run &lt;code class=&quot;highlighter-rouge&quot;&gt;jekyll serve&lt;/code&gt;, which launches a web server and auto-regenerates your site when a file is updated.&lt;/p&gt;
-
-&lt;p&gt;To add new posts, simply add a file in the &lt;code class=&quot;highlighter-rouge&quot;&gt;_posts&lt;/code&gt; directory that follows the convention &lt;code class=&quot;highlighter-rouge&quot;&gt;YYYY-MM-DD-name-of-post.ext&lt;/code&gt; and includes the necessary front matter. Take a look at the source for this post to get an idea about how it works.&lt;/p&gt;
-
-&lt;p&gt;Jekyll also offers powerful support for code snippets:&lt;/p&gt;
-
-&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ruby&quot; data-lang=&quot;ruby&quot;&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;print_hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-  &lt;span class=&quot;nb&quot;&gt;puts&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Hi, &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;#{&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;print_hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'Tom'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;UA&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;117970144&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;#=&amp;gt; prints 'Hi, Tom' to STDOUT.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
-
-&lt;p&gt;Check out the &lt;a href=&quot;https://jekyllrb.com/docs/home&quot;&gt;Jekyll docs&lt;/a&gt; for more info on how to get the most out of Jekyll. File all bugs/feature requests at &lt;a href=&quot;https://github.com/jekyll/jekyll&quot;&gt;Jekyll’s GitHub repo&lt;/a&gt;. If you have questions, you can ask them on &lt;a href=&quot;https://talk.jekyllrb.com/&quot;&gt;Jekyll Talk&lt;/a&gt;.&lt;/p&gt;</content><author><name></name></author><summary type="html">So, you want to serve page via Chromium Embedded Framework, but you don’t want to host http server (or make client do it)? There are 2 ways to achieve it, but if you are only interested in quick solution, scroll down to custom file protocol.</summary></entry></feed>
+&lt;p&gt;CefSharp version used for this code is v63.0.0.&lt;/p&gt;</content><author><name></name></author><summary type="html">So, you want to serve page via Chromium Embedded Framework, but you don’t want to host http server? There are 2 ways to achieve it, but if you are only interested in a quick solution, scroll down to custom file protocol.</summary></entry></feed>

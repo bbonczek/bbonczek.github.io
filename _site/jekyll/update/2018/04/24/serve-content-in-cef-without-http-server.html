@@ -7,15 +7,15 @@
 <meta name="generator" content="Jekyll v3.7.3" />
 <meta property="og:title" content="serve content in CEF without http server" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="So, you want to serve page via Chromium Embedded Framework, but you don’t want to host http server (or make client do it)? There are 2 ways to achieve it, but if you are only interested in quick solution, scroll down to custom file protocol." />
-<meta property="og:description" content="So, you want to serve page via Chromium Embedded Framework, but you don’t want to host http server (or make client do it)? There are 2 ways to achieve it, but if you are only interested in quick solution, scroll down to custom file protocol." />
-<link rel="canonical" href="http://localhost:4000/jekyll/update/2018/04/18/serve-content-in-cef-without-http-server.html" />
-<meta property="og:url" content="http://localhost:4000/jekyll/update/2018/04/18/serve-content-in-cef-without-http-server.html" />
+<meta name="description" content="So, you want to serve page via Chromium Embedded Framework, but you don’t want to host http server? There are 2 ways to achieve it, but if you are only interested in a quick solution, scroll down to custom file protocol." />
+<meta property="og:description" content="So, you want to serve page via Chromium Embedded Framework, but you don’t want to host http server? There are 2 ways to achieve it, but if you are only interested in a quick solution, scroll down to custom file protocol." />
+<link rel="canonical" href="http://localhost:4000/jekyll/update/2018/04/24/serve-content-in-cef-without-http-server.html" />
+<meta property="og:url" content="http://localhost:4000/jekyll/update/2018/04/24/serve-content-in-cef-without-http-server.html" />
 <meta property="og:site_name" content="bbonczek blog" />
 <meta property="og:type" content="article" />
-<meta property="article:published_time" content="2018-04-18T21:44:09+02:00" />
+<meta property="article:published_time" content="2018-04-24T21:37:00+02:00" />
 <script type="application/ld+json">
-{"description":"So, you want to serve page via Chromium Embedded Framework, but you don’t want to host http server (or make client do it)? There are 2 ways to achieve it, but if you are only interested in quick solution, scroll down to custom file protocol.","@type":"BlogPosting","url":"http://localhost:4000/jekyll/update/2018/04/18/serve-content-in-cef-without-http-server.html","headline":"serve content in CEF without http server","dateModified":"2018-04-18T21:44:09+02:00","datePublished":"2018-04-18T21:44:09+02:00","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/jekyll/update/2018/04/18/serve-content-in-cef-without-http-server.html"},"@context":"http://schema.org"}</script>
+{"description":"So, you want to serve page via Chromium Embedded Framework, but you don’t want to host http server? There are 2 ways to achieve it, but if you are only interested in a quick solution, scroll down to custom file protocol.","@type":"BlogPosting","url":"http://localhost:4000/jekyll/update/2018/04/24/serve-content-in-cef-without-http-server.html","headline":"serve content in CEF without http server","dateModified":"2018-04-24T21:37:00+02:00","datePublished":"2018-04-24T21:37:00+02:00","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/jekyll/update/2018/04/24/serve-content-in-cef-without-http-server.html"},"@context":"http://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 <link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="bbonczek blog" /></head>
 <body><header class="site-header" role="banner">
@@ -42,16 +42,16 @@
   <header class="post-header">
     <h1 class="post-title p-name" itemprop="name headline">serve content in CEF without http server</h1>
     <p class="post-meta">
-      <time class="dt-published" datetime="2018-04-18T21:44:09+02:00" itemprop="datePublished">Apr 18, 2018
+      <time class="dt-published" datetime="2018-04-24T21:37:00+02:00" itemprop="datePublished">Apr 24, 2018
       </time></p>
   </header>
 
   <div class="post-content e-content" itemprop="articleBody">
-    <p>So, you want to serve page via <code class="highlighter-rouge">Chromium Embedded Framework</code>, but you don’t want to host http server (or make client do it)? There are 2 ways to achieve it, but if you are only interested in quick solution, scroll down to <code class="highlighter-rouge">custom file protocol</code>.</p>
+    <p>So, you want to serve page via <code class="highlighter-rouge">Chromium Embedded Framework</code>, but you don’t want to host http server? There are 2 ways to achieve it, but if you are only interested in a quick solution, scroll down to <code class="highlighter-rouge">custom file protocol</code>.</p>
 
 <h3 id="why-you-cant-just-use-file-protocol">why you can’t just use file protocol</h3>
 
-<p>If you are here, than you have propably already tried using <code class="highlighter-rouge">file://</code> protocol to make it work, but you have failed - you styles are not applied, or images don’t show up. Why? Due to security restriction that comes with chromium when using file protocol. Let’s say that you have bundled your web application into this structure:</p>
+<p>If you are here, then I guess that you have already tried using <code class="highlighter-rouge">file://</code> protocol to make it work, but you have failed - your styles are not applied, or images don’t show up. Why? Due to security restrictions that come with chromium when using file protocol. Let’s say that you have bundled your web application into this structure:</p>
 
 <figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="o">|-</span> <span class="n">dist</span>
     <span class="o">|-</span> <span class="n">index</span><span class="p">.</span><span class="nf">html</span>
@@ -63,22 +63,22 @@
         <span class="o">|-</span> <span class="n">start</span><span class="p">.</span><span class="nf">svg</span>
         <span class="o">|-</span> <span class="n">stop</span><span class="p">.</span><span class="nf">svg</span></code></pre></figure>
 
-<p>and in your index.html you are requesting one of graphics located in <code class="highlighter-rouge">assets</code> folder.:</p>
+<p>and in your <code class="highlighter-rouge">index.html</code> you are requesting one of graphics located in <code class="highlighter-rouge">assets</code> folder.:</p>
 
 <figure class="highlight"><pre><code class="language-html" data-lang="html">...
 <span class="nt">&lt;p&gt;</span>image from assets requested below:<span class="nt">&lt;/p&gt;</span>
 <span class="nt">&lt;img</span> <span class="na">src=</span><span class="s">"images/arrow.svg"</span><span class="nt">/&gt;</span>
 ...</code></pre></figure>
 
-<p>Image will not be rendered, because of error looking like this:</p>
+<p>Image will not be rendered, because of an error that looks lke this:</p>
 
 <p><code class="highlighter-rouge">XMLHttpRequest cannot load file:///.../images/arrow.svg. Cross origin requests are only supported for HTTP.</code></p>
 
-<p>Chromium will not allow to you load file that has different origin (basically resided in different folder). Why it happens is because directory tree <code class="highlighter-rouge">is not</code> treated as single origin. Anything that is a child, relative to your index.html (in this case) is considered to be different origin. To read more about it, you can check out <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=47416">this chromium issue</a>.</p>
+<p>Chromium will not allow you to load file that has a different origin (basically, located in different folder). Why it happens is because a directory tree <code class="highlighter-rouge">is not</code> treated as a single origin. Anything that is a child, relative to your index.html (in this case) is not considered to be a single origin. To read more about it, you can check out <a href="https://bugs.chromium.org/p/chromium/issues/detail?id=47416">this chromium issue</a>.</p>
 
 <h3 id="why---allow-file-access-from-files-is-not-a-good-idea">why <code class="highlighter-rouge">--allow-file-access-from-files</code> is not a good idea</h3>
 
-<p>Sure, running chrome with this flag will make you app work - unfortunatelly it will open your whole file system to malicious code.</p>
+<p>Sure, running chrome with this flag will make your app work - unfortunatelly, it will open your whole file system to malicious code.</p>
 
 <p>Imagine that someone injected this into your code:</p>
 
@@ -87,12 +87,12 @@
 <span class="nt">&lt;img</span> <span class="na">src=</span><span class="s">"../../very-important-stuff-inside/passwords.png"</span><span class="nt">/&gt;</span>
 ...</code></pre></figure>
 
-<p>This snippet could easly reveal all you important stuff (keeping your passwords in png? Sure, why not).
+<p>This snippet could easily reveal all you important stuff (keeping your passwords in png? Sure, why not).
 That’s why we need:</p>
 
 <h3 id="custom-file-protocol">custom file protocol</h3>
 
-<p>CEF allows you to specify custom protocols, that allow you to craft response sufficient for your needs. What we want to create is something simmilar to file protocol, but this something should allow you to work with files from whole directory tree. For purpouse of this article let’s call it <code class="highlighter-rouge">custom protocol</code>. Let’s get to work.</p>
+<p>CEF allows you to specify custom protocols that allow you to craft response sufficient for your needs. What we want to create is something similar to file protocol, but this <em>something</em> should allow you to work with files from whole directory tree. For purpouse of this article let’s call it <code class="highlighter-rouge">custom protocol</code>. Let’s get to work.</p>
 
 <h4 id="customprotocolschemehandlercs"><code class="highlighter-rouge">CustomProtocolSchemeHandler.cs</code></h4>
 
@@ -102,13 +102,13 @@ That’s why we need:</p>
 
 <span class="k">namespace</span> <span class="nn">MyProject.CustomProtocol</span>
 <span class="p">{</span>
-    <span class="k">public</span> <span class="k">class</span> <span class="nc">CustomProtocolSchemeHandler</span><span class="err">`</span> <span class="p">:</span> <span class="n">ResourceHandler</span>
+    <span class="k">public</span> <span class="k">class</span> <span class="nc">CustomProtocolSchemeHandler</span> <span class="p">:</span> <span class="n">ResourceHandler</span>
     <span class="p">{</span>
         <span class="c1">// Specifies where you bundled app resides.</span>
         <span class="c1">// Basically path to your index.html</span>
         <span class="k">private</span> <span class="kt">string</span> <span class="n">frontendFolderPath</span><span class="p">;</span>
 
-        <span class="k">public</span> <span class="n">CustomProtocolSchemeHandler</span><span class="err">`</span><span class="p">()</span>
+        <span class="k">public</span> <span class="nf">CustomProtocolSchemeHandler</span><span class="p">()</span>
         <span class="p">{</span>
             <span class="n">frontendFolderPath</span> <span class="p">=</span> <span class="n">Path</span><span class="p">.</span><span class="nf">Combine</span><span class="p">(</span><span class="n">AppDomain</span><span class="p">.</span><span class="n">CurrentDomain</span><span class="p">.</span><span class="n">BaseDirectory</span><span class="p">,</span> <span class="s">"./bundle/"</span><span class="p">);</span>
         <span class="p">}</span>
@@ -184,47 +184,31 @@ That’s why we need:</p>
 <h4 id="controlxamlcs"><code class="highlighter-rouge">Control.xaml.cs</code></h4>
 
 <figure class="highlight"><pre><code class="language-c#" data-lang="c#"><span class="cm">/* ... */</span>
+<span class="kt">var</span> <span class="n">settings</span> <span class="p">=</span> <span class="k">new</span> <span class="n">CefSettings</span>
+<span class="p">{</span>
+  <span class="n">BrowserSubprocessPath</span> <span class="p">=</span> <span class="nf">GetCefExecutablePath</span><span class="p">()</span>
+<span class="p">};</span>
 
+<span class="n">settings</span><span class="p">.</span><span class="nf">RegisterScheme</span><span class="p">(</span><span class="k">new</span> <span class="n">CefCustomScheme</span>
+<span class="p">{</span>
+  <span class="n">SchemeName</span> <span class="p">=</span> <span class="n">CustomProtocolSchemeHandlerFactory</span><span class="p">.</span><span class="n">SchemeName</span><span class="p">,</span>
+  <span class="n">SchemeHandlerFactory</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">CustomProtocolSchemeHandlerFactory</span><span class="p">()</span>
+<span class="p">});</span>
+
+<span class="n">Cef</span><span class="p">.</span><span class="nf">Initialize</span><span class="p">(</span><span class="n">settings</span><span class="p">);</span>
+
+<span class="c1">// 'local-pc' doesn't mean anything - it's just 'placeholder' to make cef recognize it as protocol</span>
+<span class="n">browser</span> <span class="p">=</span> <span class="k">new</span> <span class="nf">ChromiumWebBrowser</span><span class="p">(</span><span class="s">"customfileprotocol:\\local-pc\\index.html"</span><span class="p">)</span>
 <span class="cm">/* ... */</span></code></pre></figure>
 
-<p>.</p>
+<p>It is important to register scheme <code class="highlighter-rouge">before</code> initializing CEF.</p>
 
-<p>.</p>
+<h3 id="notes">Notes</h3>
 
-<p>.</p>
-
-<p>.</p>
-
-<p>.</p>
-
-<p>.</p>
-
-<p>.</p>
-
-<p>.</p>
-
-<p>.</p>
-
-<p>.</p>
-
-<p>.</p>
-
-<p>You’ll find this post in your <code class="highlighter-rouge">_posts</code> directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run <code class="highlighter-rouge">jekyll serve</code>, which launches a web server and auto-regenerates your site when a file is updated.</p>
-
-<p>To add new posts, simply add a file in the <code class="highlighter-rouge">_posts</code> directory that follows the convention <code class="highlighter-rouge">YYYY-MM-DD-name-of-post.ext</code> and includes the necessary front matter. Take a look at the source for this post to get an idea about how it works.</p>
-
-<p>Jekyll also offers powerful support for code snippets:</p>
-
-<figure class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="k">def</span> <span class="nf">print_hi</span><span class="p">(</span><span class="nb">name</span><span class="p">)</span>
-  <span class="nb">puts</span> <span class="s2">"Hi, </span><span class="si">#{</span><span class="nb">name</span><span class="si">}</span><span class="s2">"</span>
-<span class="k">end</span>
-<span class="n">print_hi</span><span class="p">(</span><span class="s1">'Tom'</span><span class="p">)</span><span class="no">UA</span><span class="o">-</span><span class="mi">117970144</span><span class="o">-</span><span class="mi">1</span>
-<span class="c1">#=&gt; prints 'Hi, Tom' to STDOUT.</span></code></pre></figure>
-
-<p>Check out the <a href="https://jekyllrb.com/docs/home">Jekyll docs</a> for more info on how to get the most out of Jekyll. File all bugs/feature requests at <a href="https://github.com/jekyll/jekyll">Jekyll’s GitHub repo</a>. If you have questions, you can ask them on <a href="https://talk.jekyllrb.com/">Jekyll Talk</a>.</p>
+<p>CefSharp version used for this code is v63.0.0.</p>
 
 
-  </div><a class="u-url" href="/jekyll/update/2018/04/18/serve-content-in-cef-without-http-server.html" hidden></a>
+  </div><a class="u-url" href="/jekyll/update/2018/04/24/serve-content-in-cef-without-http-server.html" hidden></a>
 </article>
 
       </div>
