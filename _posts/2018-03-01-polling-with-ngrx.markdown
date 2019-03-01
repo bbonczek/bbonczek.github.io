@@ -12,10 +12,10 @@ Let me begin with a confession - I'm new to state management stuff. I've been us
 
 ### problem
 
-For sake of this example, let's assume that our application is displaying a list of devices that are in our subnet. At any given time, somebody could add or remove a device. Since we have no clue if something like this happened, we have to ask a server for the current state every x seconds.
+For the sake of this example, let's assume that our application is displaying a list of devices that are in our subnet. At any given time, somebody could add or remove a device. Since we have no clue if something like this happened, we have to ask a server for the current state every x seconds.
 
 Our request is a GET to this address: `http://localhost:5000/api/subnet`.
-Response from a server may look something like this:
+Response from the server may look something like this:
 
 {% highlight javascript %}
 [
@@ -29,14 +29,14 @@ Let's assume that time our server needs to scan subnet is 1 - 3 seconds, and a c
 
 The naive approach would be to send a request every 8 seconds (caching time + maximum scanning subnet time). The problem occurs, when something bad happens to our server - `browser will keep on sending new requests`, even though the server is not responding.
 
-![useful image]({{ site.url }}/assets/interval-polling.png)
+![interval-polling]({{ site.url }}/assets/interval-polling.png){:class="center-image"}
 
 ### solution
 
 What if instead of setting interval between two requests, we set it between response and request?
 
 In other words, let's send a request, wait for a response and after it arrives wait for 5 seconds, send another request and so on. Below there is a diagram that shows, what we want to do.
-![useful image]({{ site.url }}/assets/after-response-interval-polling.png)
+![interval-polling-after-response]({{ site.url }}/assets/after-response-interval-polling.png){:class="center-image"}
 
 Let's try to implement that. We will start with something easy, and write our model and actions:
 
@@ -207,5 +207,5 @@ export class SubnetEffects {
 
 ### small effects
 
-I find this way of composing a feature from multiple small effects very useful. If you don't want to keep any private variable in an effect (`isPollingActive`), it could easily be stored in the store, and accessed via `withLatestFrom` operator.
+I find this way of composing a feature from multiple small effects very useful. If you don't want to keep any private variable in an effect (`isPollingActive`), it could easily be stored in the state, and accessed via `withLatestFrom` operator.
 
