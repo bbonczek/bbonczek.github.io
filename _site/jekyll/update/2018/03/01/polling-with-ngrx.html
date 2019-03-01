@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><!-- Begin Jekyll SEO tag v2.4.0 -->
+<title>polling with ngrx | bbonczek blog</title>
+<meta name="generator" content="Jekyll v3.7.3" />
+<meta property="og:title" content="polling with ngrx" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="So, you want to do polling to a server using NgRx? I assume you want to wait for each server response before sending new request, and also you want your code to be readable and preferably testable? Perhaps you want to implement long polling? Here is the solution." />
+<meta property="og:description" content="So, you want to do polling to a server using NgRx? I assume you want to wait for each server response before sending new request, and also you want your code to be readable and preferably testable? Perhaps you want to implement long polling? Here is the solution." />
+<link rel="canonical" href="http://localhost:4000/jekyll/update/2018/03/01/polling-with-ngrx.html" />
+<meta property="og:url" content="http://localhost:4000/jekyll/update/2018/03/01/polling-with-ngrx.html" />
+<meta property="og:site_name" content="bbonczek blog" />
+<meta property="og:type" content="article" />
+<meta property="article:published_time" content="2018-03-01T16:15:00+01:00" />
+<script type="application/ld+json">
+{"description":"So, you want to do polling to a server using NgRx? I assume you want to wait for each server response before sending new request, and also you want your code to be readable and preferably testable? Perhaps you want to implement long polling? Here is the solution.","@type":"BlogPosting","url":"http://localhost:4000/jekyll/update/2018/03/01/polling-with-ngrx.html","headline":"polling with ngrx","dateModified":"2018-03-01T16:15:00+01:00","datePublished":"2018-03-01T16:15:00+01:00","mainEntityOfPage":{"@type":"WebPage","@id":"http://localhost:4000/jekyll/update/2018/03/01/polling-with-ngrx.html"},"@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+<link rel="stylesheet" href="/assets/main.css"><link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="bbonczek blog" /></head>
+<body><header class="site-header" role="banner">
+
+  <div class="wrapper"><a class="site-title" rel="author" href="/">bbonczek blog</a><nav class="site-nav">
+        <input type="checkbox" id="nav-trigger" class="nav-trigger" />
+        <label for="nav-trigger">
+          <span class="menu-icon">
+            <svg viewBox="0 0 18 15" width="18px" height="15px">
+              <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+              <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+              <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+            </svg>
+          </span>
+        </label>
+
+        <div class="trigger"><a class="page-link" href="/about/">about</a></div>
+      </nav></div>
+</header>
+<main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+
+  <header class="post-header">
+    <h1 class="post-title p-name" itemprop="name headline">polling with ngrx</h1>
+    <p class="post-meta">
+      <time class="dt-published" datetime="2018-03-01T16:15:00+01:00" itemprop="datePublished">Mar 1, 2018
+      </time></p>
+  </header>
+
+  <div class="post-content e-content" itemprop="articleBody">
+    <p>So, you want to do polling to a server using <code class="highlighter-rouge">NgRx</code>? I assume you want to wait for each server response <code class="highlighter-rouge">before sending new request</code>, and also you want your code to be readable and preferably testable? Perhaps you want to implement long polling? Here is the solution.</p>
+
+<h3 id="disclaimer">disclaimer</h3>
+
+<p>Let me begin with a confession - I’m new to state management stuff. I’ve been using <code class="highlighter-rouge">NgRx</code> for about 2 months now, so everything below should be taken with a grain of salt.</p>
+
+<h3 id="problem">problem</h3>
+
+<p>For the sake of this example, let’s assume that our application is displaying a list of devices that are in our subnet. At any given time, somebody could add or remove a device. Since we have no clue if something like this happened, we have to ask a server for the current state every x seconds.</p>
+
+<p>Our request is a GET to this address: <code class="highlighter-rouge">http://localhost:5000/api/subnet</code>.
+Response from the server may look something like this:</p>
+
+<figure class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">[</span>
+  <span class="p">{</span> <span class="na">ip</span><span class="p">:</span> <span class="s2">"192.168.1.1"</span><span class="p">,</span> <span class="na">type</span><span class="p">:</span> <span class="s2">"router"</span><span class="p">,</span> <span class="na">name</span><span class="p">:</span> <span class="s2">"TP-Link AC1750"</span> <span class="p">},</span>
+  <span class="p">{</span> <span class="na">ip</span><span class="p">:</span> <span class="s2">"192.168.1.2"</span><span class="p">,</span> <span class="na">type</span><span class="p">:</span> <span class="s2">"PC"</span><span class="p">,</span> <span class="na">name</span><span class="p">:</span> <span class="s2">"home-pc"</span> <span class="p">},</span>
+  <span class="p">{</span> <span class="na">ip</span><span class="p">:</span> <span class="s2">"192.168.1.3"</span><span class="p">,</span> <span class="na">type</span><span class="p">:</span> <span class="s2">"unknown"</span><span class="p">,</span> <span class="na">name</span><span class="p">:</span> <span class="s2">"raspberryPI"</span> <span class="p">}</span>
+<span class="p">]</span></code></pre></figure>
+
+<p>Let’s assume that time our server needs to scan subnet is 1 - 3 seconds, and a cache is stored for 5 seconds. It means that there is no point in sending a request more often than at least 6 seconds.</p>
+
+<p>The naive approach would be to send a request every 8 seconds (caching time + maximum scanning subnet time). The problem occurs, when something bad happens to our server - <code class="highlighter-rouge">browser will keep on sending new requests</code>, even though the server is not responding.</p>
+
+<p><img src="http://localhost:4000/assets/interval-polling.png" alt="interval-polling" class="center-image" /></p>
+
+<h3 id="solution">solution</h3>
+
+<p>What if instead of setting interval between two requests, we set it between response and request?</p>
+
+<p>In other words, let’s send a request, wait for a response and after it arrives wait for 5 seconds, send another request and so on. Below there is a diagram that shows, what we want to do.
+<img src="http://localhost:4000/assets/after-response-interval-polling.png" alt="interval-polling-after-response" class="center-image" /></p>
+
+<p>Let’s try to implement that. We will start with something easy, and write our model and actions:</p>
+
+<h4 id="subnetentrymodelts"><code class="highlighter-rouge">subnetEntry.model.ts</code></h4>
+
+<figure class="highlight"><pre><code class="language-ts" data-lang="ts"><span class="k">export</span> <span class="kr">interface</span> <span class="nx">SubnetEntry</span> <span class="p">{</span>
+  <span class="nl">ip</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
+  <span class="nl">type</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
+  <span class="nl">name</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
+<span class="p">}</span></code></pre></figure>
+
+<h4 id="subnetactionsts"><code class="highlighter-rouge">subnet.actions.ts</code></h4>
+
+<figure class="highlight"><pre><code class="language-ts" data-lang="ts"><span class="k">import</span> <span class="p">{</span> <span class="nx">Action</span> <span class="p">}</span> <span class="k">from</span> <span class="s1">'@ngrx/store'</span><span class="p">;</span>
+
+<span class="k">export</span> <span class="kr">enum</span> <span class="nx">SubnetActionTypes</span> <span class="p">{</span>
+  <span class="nx">GetSubnetDevicesRequested</span> <span class="o">=</span> <span class="s1">'[Subnet] Get Devices Requested'</span><span class="p">,</span>
+  <span class="nx">GetSubnetDevicesSucceded</span> <span class="o">=</span> <span class="s1">'[Subnet] Get Devices Succeded'</span>
+  <span class="nx">GetSubnetDevicesFailed</span> <span class="o">=</span> <span class="s1">'[Subnet] Get Devices Failed'</span><span class="p">,</span>
+  <span class="nx">StartPollingSubnetDevices</span> <span class="o">=</span> <span class="s1">'[Subnet] Start Polling'</span><span class="p">,</span>
+  <span class="nx">StopPollingSubnetDevices</span> <span class="o">=</span> <span class="s1">'[Subnet] Stop Polling'</span>
+<span class="p">}</span>
+
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">GetSubnetDevicesRequested</span> <span class="kr">implements</span> <span class="nx">Action</span> <span class="p">{</span>
+  <span class="nx">readonly</span> <span class="nx">type</span> <span class="o">=</span> <span class="nx">SubnetActionTypes</span><span class="p">.</span><span class="nx">GetSubnetDevicesRequested</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">GetSubnetDevicesSucceded</span> <span class="kr">implements</span> <span class="nx">Action</span> <span class="p">{</span>
+  <span class="nx">readonly</span> <span class="nx">type</span> <span class="o">=</span> <span class="nx">SubnetActionTypes</span><span class="p">.</span><span class="nx">GetSubnetDevicesSucceded</span><span class="p">;</span>
+
+  <span class="kd">constructor</span><span class="p">(</span><span class="kr">public</span> <span class="nx">payload</span><span class="p">:</span> <span class="p">{</span><span class="nl">entries</span><span class="p">:</span> <span class="nx">SubnetEntry</span><span class="p">[]})</span> <span class="p">{}</span>
+<span class="p">}</span>
+
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">GetSubnetDevicesFailed</span> <span class="kr">implements</span> <span class="nx">Action</span> <span class="p">{</span>
+  <span class="nx">readonly</span> <span class="nx">type</span> <span class="o">=</span> <span class="nx">SubnetActionTypes</span><span class="p">.</span><span class="nx">GetSubnetDevicesFailed</span><span class="p">;</span>
+
+  <span class="kd">constructor</span><span class="p">(</span><span class="kr">public</span> <span class="nx">payload</span><span class="p">:</span> <span class="p">{</span><span class="nl">error</span><span class="p">:</span> <span class="nx">string</span><span class="p">})</span> <span class="p">{}</span>
+<span class="p">}</span>
+
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">StartPollingSubnetDevices</span> <span class="kr">implements</span> <span class="nx">Action</span> <span class="p">{</span>
+  <span class="nx">readonly</span> <span class="nx">type</span> <span class="o">=</span> <span class="nx">SubnetActionTypes</span><span class="p">.</span><span class="nx">StartPollingSubnetDevices</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">StopPollingSubnetDevices</span> <span class="kr">implements</span> <span class="nx">Action</span> <span class="p">{</span>
+  <span class="nx">readonly</span> <span class="nx">type</span> <span class="o">=</span> <span class="nx">SubnetActionTypes</span><span class="p">.</span><span class="nx">StopPollingSubnetDevices</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">export</span> <span class="nx">type</span> <span class="nx">SubnetActionsUnion</span> <span class="o">=</span>
+  <span class="o">|</span> <span class="nx">GetSubnetDevicesRequested</span>
+  <span class="o">|</span> <span class="nx">GetSubnetDevicesSucceded</span>
+  <span class="o">|</span> <span class="nx">GetSubnetDevicesFailed</span>
+  <span class="o">|</span> <span class="nx">StartPollingSubnetDevices</span>
+  <span class="o">|</span> <span class="nx">StopPollingSubnetDevices</span><span class="p">;</span></code></pre></figure>
+
+<p>Next thing we will do is write our reducer. It’s super easy as well.</p>
+
+<h4 id="subnetreducerts"><code class="highlighter-rouge">subnet.reducer.ts</code></h4>
+
+<figure class="highlight"><pre><code class="language-ts" data-lang="ts"><span class="k">import</span> <span class="o">*</span> <span class="k">as</span> <span class="nx">SubnetActions</span> <span class="k">from</span> <span class="s1">'./subnet.actions.ts'</span><span class="p">;</span>
+<span class="k">import</span> <span class="nx">SubnetEntry</span> <span class="k">from</span> <span class="s1">'./subnetEntry.model.ts'</span><span class="p">;</span>
+
+<span class="k">export</span> <span class="kr">interface</span> <span class="nx">State</span> <span class="p">{</span>
+  <span class="nl">entries</span><span class="p">:</span> <span class="nx">SubnetEntry</span><span class="p">[];</span>
+  <span class="nl">error</span><span class="p">:</span> <span class="nx">string</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">export</span> <span class="kd">const</span> <span class="nx">initialState</span><span class="p">:</span> <span class="nx">State</span> <span class="p">{</span>
+  <span class="nl">entries</span><span class="p">:</span> <span class="p">[],</span>
+  <span class="nx">error</span><span class="p">:</span> <span class="s1">''</span>
+<span class="p">};</span>
+
+<span class="k">export</span> <span class="kd">function</span> <span class="nx">reducer</span><span class="p">(</span>
+  <span class="nx">state</span><span class="p">:</span> <span class="nx">State</span> <span class="o">=</span> <span class="nx">initialState</span><span class="p">,</span>
+  <span class="nx">action</span><span class="p">:</span> <span class="nx">SubnetActions</span><span class="p">.</span><span class="nx">SubnetActionsUnion</span>
+<span class="p">):</span> <span class="nx">State</span> <span class="p">{</span>
+  <span class="k">switch</span> <span class="p">(</span><span class="nx">action</span><span class="p">.</span><span class="nx">type</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="nx">SubnetActions</span><span class="p">.</span><span class="nx">SubnetActionTypes</span><span class="p">.</span><span class="nx">GetSubnetDevicesSucceded</span><span class="p">:</span>
+      <span class="k">return</span> <span class="p">{</span>
+        <span class="na">entries</span><span class="p">:</span> <span class="nx">action</span><span class="p">.</span><span class="nx">payload</span><span class="p">.</span><span class="nx">entries</span><span class="p">,</span>
+        <span class="na">error</span><span class="p">:</span> <span class="s1">''</span>
+      <span class="p">};</span>
+
+    <span class="k">case</span> <span class="nx">SubnetActions</span><span class="p">.</span><span class="nx">SubnetActionTypes</span><span class="p">.</span><span class="nx">GetSubnetDevicesFailed</span><span class="p">:</span>
+      <span class="k">return</span> <span class="p">{</span>
+        <span class="na">entries</span><span class="p">:</span> <span class="p">[],</span>
+        <span class="na">error</span><span class="p">:</span> <span class="nx">action</span><span class="p">.</span><span class="nx">payload</span><span class="p">.</span><span class="nx">error</span>
+      <span class="p">};</span>
+
+    <span class="nl">default</span><span class="p">:</span>
+      <span class="nx">state</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">export</span> <span class="kd">const</span> <span class="nx">getEntries</span> <span class="o">=</span> <span class="p">(</span><span class="nx">state</span><span class="p">:</span> <span class="nx">State</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">state</span><span class="p">.</span><span class="nx">entries</span><span class="p">;</span>
+<span class="k">export</span> <span class="kd">const</span> <span class="nx">getError</span> <span class="o">=</span> <span class="p">(</span><span class="nx">state</span><span class="p">:</span> <span class="nx">State</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="nx">state</span><span class="p">.</span><span class="nx">error</span><span class="p">;</span></code></pre></figure>
+
+<p>Pretty standard reducer, huh?</p>
+
+<p>Now let’s get to the meat of the problem.</p>
+
+<h4 id="subneteffectts"><code class="highlighter-rouge">subnet.effect.ts</code></h4>
+
+<figure class="highlight"><pre><code class="language-ts" data-lang="ts"><span class="k">import</span> <span class="p">{</span> <span class="nx">Injectable</span> <span class="p">}</span> <span class="k">from</span> <span class="s1">'@angular/core'</span><span class="p">;</span>
+<span class="k">import</span> <span class="p">{</span> <span class="k">of</span> <span class="p">}</span> <span class="k">from</span> <span class="s1">'rxjs'</span><span class="p">;</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">Effect</span><span class="p">,</span> <span class="nx">Actions</span><span class="p">,</span> <span class="nx">ofType</span> <span class="p">}</span> <span class="k">from</span> <span class="s1">'@ngrx/effects'</span><span class="p">;</span>
+<span class="k">import</span> <span class="p">{</span> <span class="nx">map</span><span class="p">,</span> <span class="nx">switchMap</span><span class="p">,</span> <span class="nx">catchError</span><span class="p">,</span> <span class="nx">takeWhile</span><span class="p">,</span> <span class="nx">delay</span> <span class="p">}</span> <span class="k">from</span> <span class="s1">'rxjs/operators'</span><span class="p">;</span>
+<span class="k">import</span> <span class="o">*</span> <span class="k">as</span> <span class="nx">SubnetActions</span> <span class="k">from</span> <span class="s1">'./subnet.actions.ts'</span><span class="p">;</span>
+<span class="k">import</span> <span class="nx">SubnetEntry</span> <span class="k">from</span> <span class="s1">'./subnetEntry.model.ts'</span><span class="p">;</span>
+
+<span class="p">@</span><span class="nd">Injectable</span><span class="p">()</span>
+<span class="k">export</span> <span class="kd">class</span> <span class="nx">SubnetEffects</span> <span class="p">{</span>
+  <span class="kd">constructor</span><span class="p">(</span>
+    <span class="kr">private</span> <span class="nx">actions$</span><span class="p">:</span> <span class="nx">Actions</span><span class="o">&lt;</span><span class="nx">SubnetActions</span><span class="p">.</span><span class="nx">SubnetActionsUnion</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="kr">private</span> <span class="nx">http</span><span class="p">:</span> <span class="nx">HttpClient</span>
+  <span class="p">)</span> <span class="p">{}</span>
+
+  <span class="kr">private</span> <span class="nx">isPollingActive</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span> <span class="c1">// a flag that indicates whether polling is active or not</span>
+
+  <span class="c1">// This effect starts polling. There is no other way of initializing polling that calling StartPollingSubnetDevices action.</span>
+  <span class="p">@</span><span class="nd">Effect</span><span class="p">()</span>
+  <span class="nx">startPolling$</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">actions$</span><span class="p">.</span><span class="nx">pipe</span><span class="p">(</span>
+    <span class="nx">ofType</span><span class="p">(</span><span class="nx">SubnetActions</span><span class="p">.</span><span class="nx">SubnetActionTypes</span><span class="p">.</span><span class="nx">StartPollingSubnetDevices</span><span class="p">),</span>
+    <span class="nx">map</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">isPollingActive</span> <span class="o">=</span> <span class="kc">false</span><span class="p">),</span> <span class="c1">// switch flag to true</span>
+    <span class="nx">switchMap</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">http</span><span class="p">.</span><span class="kd">get</span><span class="o">&lt;</span><span class="nx">SubnetEntry</span><span class="o">&gt;</span><span class="p">(</span><span class="s1">'http://localhost:5000/api/subnet'</span><span class="p">).</span><span class="nx">pipe</span><span class="p">(</span>
+        <span class="nx">switchMap</span><span class="p">(</span><span class="nx">entries</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="nx">SubnetActions</span><span class="p">.</span><span class="nx">GetSubnetDevicesSucceded</span><span class="p">({</span> <span class="nx">entries</span> <span class="p">})),</span>
+        <span class="nx">catchError</span><span class="p">(</span><span class="nx">error</span> <span class="o">=&gt;</span> <span class="k">of</span><span class="p">(</span><span class="k">new</span> <span class="nx">SubnetActions</span><span class="p">.</span><span class="nx">GetSubnetDevicesFailed</span><span class="p">({</span> <span class="nx">error</span> <span class="p">})))</span>
+      <span class="p">),</span>
+    <span class="p">}),</span>
+  <span class="p">);</span>
+
+  <span class="c1">// This effect stops polling. There is no other way to stop polling that calling Stop PollingSubnetDevices action.</span>
+  <span class="p">@</span><span class="nd">Effect</span><span class="p">()</span>
+  <span class="nx">stopPolling$</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">actions$</span><span class="p">.</span><span class="nx">pipe</span><span class="p">(</span>
+    <span class="nx">ofType</span><span class="p">(</span><span class="nx">SubnetActions</span><span class="p">.</span><span class="nx">SubnetActionTypes</span><span class="p">.</span><span class="nx">StopPollingSubnetDevices</span><span class="p">),</span>
+    <span class="nx">map</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">isPollingActive</span> <span class="o">=</span> <span class="kc">false</span><span class="p">)</span> <span class="c1">// switch flag to false</span>
+  <span class="p">);</span>
+
+  <span class="c1">// this effect repeats only if time since last response is at least 5 seconds.</span>
+  <span class="p">@</span><span class="nd">Effect</span><span class="p">()</span>
+  <span class="nx">continuePolling$</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">actions$</span><span class="p">.</span><span class="nx">pipe</span><span class="p">(</span>
+    <span class="nx">ofType</span><span class="p">(</span>
+      <span class="nx">SubnetActions</span><span class="p">.</span><span class="nx">SubnetActionTypes</span><span class="p">.</span><span class="nx">GetSubnetDevicesSucceded</span><span class="p">,</span>
+      <span class="nx">SubnetActions</span><span class="p">.</span><span class="nx">SubnetActionTypes</span><span class="p">.</span><span class="nx">GetSubnetDevicesFailed</span>
+    <span class="p">),</span>
+    <span class="nx">takeWhile</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">isPollingActive</span><span class="p">),</span> <span class="c1">// do this only as long as flag is set to true</span>
+    <span class="nx">switchMap</span><span class="p">(()</span> <span class="o">=&gt;</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">http</span><span class="p">.</span><span class="kd">get</span><span class="o">&lt;</span><span class="nx">SubnetEntry</span><span class="o">&gt;</span><span class="p">(</span><span class="s1">'http://localhost:5000/api/subnet'</span><span class="p">).</span><span class="nx">pipe</span><span class="p">(</span>
+        <span class="nx">delay</span><span class="p">(</span><span class="mi">5000</span><span class="p">),</span>
+        <span class="nx">switchMap</span><span class="p">(</span><span class="nx">entries</span> <span class="o">=&gt;</span> <span class="k">new</span> <span class="nx">SubnetActions</span><span class="p">.</span><span class="nx">GetSubnetDevicesSucceded</span><span class="p">({</span> <span class="nx">entries</span> <span class="p">})),</span>
+        <span class="nx">catchError</span><span class="p">(</span><span class="nx">error</span> <span class="o">=&gt;</span> <span class="k">of</span><span class="p">(</span><span class="k">new</span> <span class="nx">SubnetActions</span><span class="p">.</span><span class="nx">GetSubnetDevicesFailed</span><span class="p">({</span> <span class="nx">error</span> <span class="p">})))</span>
+      <span class="p">);</span>
+    <span class="p">})</span>
+  <span class="p">);</span>
+<span class="p">}</span></code></pre></figure>
+
+<h3 id="small-effects">small effects</h3>
+
+<p>I find this way of composing a feature from multiple small effects very useful. If you don’t want to keep any private variable in an effect (<code class="highlighter-rouge">isPollingActive</code>), it could easily be stored in the state, and accessed via <code class="highlighter-rouge">withLatestFrom</code> operator.</p>
+
+
+  </div><a class="u-url" href="/jekyll/update/2018/03/01/polling-with-ngrx.html" hidden></a>
+</article>
+
+      </div>
+    </main><footer class="site-footer h-card">
+  <data class="u-url" href="/"></data>
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">bbonczek blog</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li class="p-name">bbonczek blog</li><li><a class="u-email" href="mailto:bartoszbaczek@gmail.com">bartoszbaczek@gmail.com</a></li></ul>
+      </div>
+
+      <div class="footer-col footer-col-2"><ul class="social-media-list"><li><a href="https://github.com/bbonczek"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#github"></use></svg> <span class="username">bbonczek</span></a></li><li><a href="https://www.twitter.com/bbbonczek"><svg class="svg-icon"><use xlink:href="/assets/minima-social-icons.svg#twitter"></use></svg> <span class="username">bbbonczek</span></a></li></ul>
+</div>
+
+      <div class="footer-col footer-col-3">
+        <p>I write about stuff.</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+</body>
+
+</html>
