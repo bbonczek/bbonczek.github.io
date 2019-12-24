@@ -168,7 +168,7 @@ export class SubnetEffects {
   @Effect()
   startPolling$ = this.actions$.pipe(
     ofType(SubnetActions.SubnetActionTypes.StartPollingSubnetDevices),
-    map(() => this.isPollingActive = false), // switch flag to true
+    map(() => this.isPollingActive = true), // switch flag to true
     switchMap(() => {
       return this.http.get<SubnetEntry>('http://localhost:5000/api/subnet').pipe(
         switchMap(entries => new SubnetActions.GetSubnetDevicesSucceded({ entries })),
